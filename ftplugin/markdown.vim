@@ -493,8 +493,10 @@ endfunction
 function! s:FindCornerOfSyntax(lnum, col, step)
     let l:col = a:col
     let l:syn = synIDattr(synID(a:lnum, l:col, 1), 'name')
-    while synIDattr(synID(a:lnum, l:col, 1), 'name') ==# l:syn
+    let l:steps = 0
+    while synIDattr(synID(a:lnum, l:col, 1), 'name') ==# l:syn && l:steps < 100
         let l:col += a:step
+	let l:steps += 1
     endwhile
     return l:col - a:step
 endfunction
@@ -507,9 +509,14 @@ endfunction
 function! s:FindNextSyntax(lnum, col, name)
     let l:col = a:col
     let l:step = 1
-    while synIDattr(synID(a:lnum, l:col, 1), 'name') !=# a:name
+    let l:steps = 0
+    while synIDattr(synID(a:lnum, l:col, 1), 'name') !=# a:name && l:steps < 100
         let l:col += l:step
+	let l:steps += 1
     endwhile
+    if l:steps ==# 100
+	return [a:lnum, a:col]
+    endif
     return [a:lnum, l:col]
 endfunction
 
