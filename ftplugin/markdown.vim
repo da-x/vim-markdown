@@ -641,6 +641,15 @@ if !exists('*s:EditUrlUnderCursor')
             echomsg 'The cursor is not on a link.'
         endif
     endfunction
+
+    function! s:OpenAnyUnderCursor()
+        let l:url = s:Markdown_GetUrlForPosition(line('.'), col('.'))
+        if l:url =~ "^http:" || l:url =~ "^https:"
+            call s:OpenUrlUnderCursor()
+        else
+            call s:EditUrlUnderCursor()
+        endif
+    endfunction
 endif
 
 function! s:VersionAwareNetrwBrowseX(url)
@@ -666,6 +675,7 @@ call <sid>MapNormVis('<Plug>Markdown_MoveToParentHeader', '<sid>MoveToParentHead
 call <sid>MapNormVis('<Plug>Markdown_MoveToCurHeader', '<sid>MoveToCurHeader')
 nnoremap <Plug>Markdown_OpenUrlUnderCursor :call <sid>OpenUrlUnderCursor()<cr>
 nnoremap <Plug>Markdown_EditUrlUnderCursor :call <sid>EditUrlUnderCursor()<cr>
+nnoremap <Plug>Markdown_OpenAnyUnderCursor :call <sid>OpenAnyUnderCursor()<cr>
 
 if !get(g:, 'vim_markdown_no_default_key_mappings', 0)
     call <sid>MapNotHasmapto(']]', 'Markdown_MoveToNextHeader')
