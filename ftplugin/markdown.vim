@@ -614,7 +614,11 @@ if !exists('*s:EditUrlUnderCursor')
                     let l:ext = '.md'
                 endif
             endif
-            let l:url = fnameescape(fnamemodify(expand('%:h').'/'.l:url.l:ext, ':.'))
+            if l:url =~# '\V\^/'
+              let l:url = l:url
+            else
+              let l:url = fnameescape(fnamemodify(expand('%:h').'/'.l:url.l:ext, ':.'))
+            endif
             let l:editmethod = ''
             " determine how to open the linked file (split, tab, etc)
             if exists('g:vim_markdown_edit_url_in')
