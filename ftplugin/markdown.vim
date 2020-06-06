@@ -586,57 +586,62 @@ endfunction
 " We need a definition guard because we invoke 'edit' which will reload this
 " script while this function is running. We must not replace it.
 if !exists('*s:EditUrlUnderCursor')
+    function! s:EditUrl(url)
+        let l:url = a:url
+        if get(g:, 'vim_markdown_autowrite', 0)
+            write
+        endif
+        let l:anchor = ''
+        if get(g:, 'vim_markdown_follow_anchor', 0)
+            let l:parts = split(l:url, '#', 1)
+            if len(l:parts) == 2
+                let [l:url, l:anchor] = parts
+                let l:anchorexpr = get(g:, 'vim_markdown_anchorexpr', '')
+                if l:anchorexpr != ''
+                    let l:anchor = eval(substitute(
+                        \ l:anchorexpr, 'v:anchor',
+                        \ escape('"'.l:anchor.'"', '"'), ''))
+                endif
+            endif
+        endif
+        if l:url != ''
+            let l:ext = ''
+            if get(g:, 'vim_markdown_no_extensions_in_markdown', 0)
+                " use another file extension if preferred
+                if exists('g:vim_markdown_auto_extension_ext')
+                    let l:ext = '.'.g:vim_markdown_auto_extension_ext
+                else
+                    let l:ext = '.md'
+                endif
+            endif
+            let l:url = fnameescape(fnamemodify(expand('%:h').'/'.l:url.l:ext, ':.'))
+            let l:editmethod = ''
+            " determine how to open the linked file (split, tab, etc)
+            if exists('g:vim_markdown_edit_url_in')
+              if g:vim_markdown_edit_url_in == 'tab'
+                let l:editmethod = 'tabnew'
+              elseif g:vim_markdown_edit_url_in == 'vsplit'
+                let l:editmethod = 'vsp'
+              elseif g:vim_markdown_edit_url_in == 'hsplit'
+                let l:editmethod = 'sp'
+              else
+                let l:editmethod = 'edit'
+              endif
+            else
+              " default to current buffer
+              let l:editmethod = 'edit'
+            endif
+            execute l:editmethod l:url
+        endif
+        if l:anchor != ''
+            silent! execute '/'.l:anchor
+        endif
+    endfunction
+
     function s:EditUrlUnderCursor()
         let l:url = s:Markdown_GetUrlForPosition(line('.'), col('.'))
         if l:url != ''
-            if get(g:, 'vim_markdown_autowrite', 0)
-                write
-            endif
-            let l:anchor = ''
-            if get(g:, 'vim_markdown_follow_anchor', 0)
-                let l:parts = split(l:url, '#', 1)
-                if len(l:parts) == 2
-                    let [l:url, l:anchor] = parts
-                    let l:anchorexpr = get(g:, 'vim_markdown_anchorexpr', '')
-                    if l:anchorexpr != ''
-                        let l:anchor = eval(substitute(
-                            \ l:anchorexpr, 'v:anchor',
-                            \ escape('"'.l:anchor.'"', '"'), ''))
-                    endif
-                endif
-            endif
-            if l:url != ''
-                let l:ext = ''
-                if get(g:, 'vim_markdown_no_extensions_in_markdown', 0)
-                    " use another file extension if preferred
-                    if exists('g:vim_markdown_auto_extension_ext')
-                        let l:ext = '.'.g:vim_markdown_auto_extension_ext
-                    else
-                        let l:ext = '.md'
-                    endif
-                endif
-                let l:url = fnameescape(fnamemodify(expand('%:h').'/'.l:url.l:ext, ':.'))
-                let l:editmethod = ''
-                " determine how to open the linked file (split, tab, etc)
-                if exists('g:vim_markdown_edit_url_in')
-                  if g:vim_markdown_edit_url_in == 'tab'
-                    let l:editmethod = 'tabnew'
-                  elseif g:vim_markdown_edit_url_in == 'vsplit'
-                    let l:editmethod = 'vsp'
-                  elseif g:vim_markdown_edit_url_in == 'hsplit'
-                    let l:editmethod = 'sp'
-                  else
-                    let l:editmethod = 'edit'
-                  endif
-                else
-                  " default to current buffer
-                  let l:editmethod = 'edit'
-                endif
-                execute l:editmethod l:url
-            endif
-            if l:anchor != ''
-                silent! execute '/'.l:anchor
-            endif
+            call s:EditUrl(l:url)
         else
             echomsg 'The cursor is not on a link.'
         endif
@@ -644,10 +649,14 @@ if !exists('*s:EditUrlUnderCursor')
 
     function! s:OpenAnyUnderCursor()
         let l:url = s:Markdown_GetUrlForPosition(line('.'), col('.'))
+        let l:Markdown_LinkFilter = get(b:, "Markdown_LinkFilter", "none")
+        if l:Markdown_LinkFilter != "none"
+            let l:url = l:Markdown_LinkFilter(l:url)
+        endif
         if l:url =~ "^http:" || l:url =~ "^https:"
-            call s:OpenUrlUnderCursor()
+            call s:VersionAwareNetrwBrowseX(l:url)
         else
-            call s:EditUrlUnderCursor()
+            call s:EditUrl(l:url)
         endif
     endfunction
 endif
