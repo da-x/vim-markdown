@@ -44,6 +44,11 @@ endif
 if has('conceal') && get(g:, 'vim_markdown_conceal_code_blocks', 1)
   let s:concealcode = ' concealends'
 endif
+if get(g:, 'vim_markdown_spell_title', 1)
+  let s:spellTitle = 'Spell'
+else
+  let s:spellTitle = 'NoSpell'
+endif
 
 " additions to HTML groups
 if get(g:, 'vim_markdown_emphasis_multiline', 1)
@@ -65,7 +70,7 @@ execute 'syn region htmlBoldItalic matchgroup=mkdBoldItalic start="\%(^\|\s\)\zs
 syn region mkdFootnotes matchgroup=mkdDelimiter start="\[^"    end="\]"
 execute 'syn region mkdID matchgroup=mkdDelimiter    start="\["    end="\]" contained oneline' . s:conceal
 execute 'syn region mkdURL matchgroup=mkdDelimiter   start="("     end=")"  contained oneline' . s:conceal
-execute 'syn region mkdLink matchgroup=mkdDelimiter  start="\\\@<!!\?\[\ze[^]\n]*\n\?[^]\n]*\][[(]" end="\]" contains=@mkdNonListItem,@Spell nextgroup=mkdURL,mkdID skipwhite' . s:concealends
+execute 'syn region mkdLink matchgroup=mkdDelimiter  start="\\\@<!!\?\[\ze[^]\n]*\n\?[^]\n]*\][[(]" end="\]" contains=@mkdNonListItem,@'.s:spellTitle.' nextgroup=mkdURL,mkdID skipwhite' . s:concealends
 
 " Autolink without angle brackets.
 " mkd  inline links:      protocol     optional  user:pass@  sub/domain                    .com, .co.uk, etc         optional port   path/querystring/hash fragment
