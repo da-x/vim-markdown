@@ -667,9 +667,17 @@ endif
 
 function! s:VersionAwareNetrwBrowseX(url)
     if has('patch-7.4.567')
-        call netrw#BrowseX(a:url, 0)
+        if exists('*netrw#BrowseX')
+            call netrw#BrowseX(a:url, 0)
+        else
+            execute 'silent !xdg-open ' . shellescape(a:url, 1)
+        endif
     else
-        call netrw#NetrwBrowseX(a:url, 0)
+        if exists('*netrw#NetrwBrowseX')
+            call netrw#NetrwBrowseX(a:url, 0)
+        else
+            execute 'silent !xdg-open ' . shellescape(a:url, 1)
+        endif
     endif
 endf
 
